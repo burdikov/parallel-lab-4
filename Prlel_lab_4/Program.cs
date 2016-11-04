@@ -69,16 +69,6 @@ namespace Prlel_lab_4
             Console.WriteLine("Время: " + timer.ElapsedMilliseconds + "\n");
 
             dict11 = dict11.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
-            int k = 0;
-
-            /*
-            Console.WriteLine("10 самых популярных слов:");
-            foreach (var pair in dict11)
-            {
-                Console.WriteLine(pair.Key.ToUpper() + ". Вхождений: " + pair.Value);
-                if (++k == 10) break;
-            }
-            */
         }
 
         static void dowork(object o)
