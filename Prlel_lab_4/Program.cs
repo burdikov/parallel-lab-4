@@ -30,17 +30,18 @@ namespace Prlel_lab_4
             {
                 paths.Add(s + (i + 1) + ".txt");
             }
-
-            sXe();
+            
+            //sXe();
             v11();
-            v12();
-            v2();
+            //v12();
+            //v2();
 
+            /*
             if (!checkOnEtalonne(dict11) | !checkOnEtalonne(result12) | !checkOnEtalonne(result2))
                 Console.WriteLine("Wow! Something went wrong!");
             else
                 Console.WriteLine("Everething is OK!");
-
+                */
             Console.ReadKey();
         }
 
@@ -49,6 +50,8 @@ namespace Prlel_lab_4
         //===========
 
         static Dictionary<string, long> dict11 = new Dictionary<string, long>();
+        static Dictionary<char, long> dict11b = new Dictionary<char, long>();
+        static Dictionary<string, long> dict11c = new Dictionary<string, long>();
 
         static void v11()
         {
@@ -69,6 +72,25 @@ namespace Prlel_lab_4
             Console.WriteLine("Время: " + timer.ElapsedMilliseconds + "\n");
 
             dict11 = dict11.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
+            dict11b = dict11b.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
+
+            int z = 0;
+            foreach (var item in dict11)
+            {
+                Console.WriteLine(item.Key + " " + item.Value);
+                if (z++ == 20) break;
+            }
+            z = 0; Console.WriteLine("========================");
+            foreach (var item in dict11b)
+            {
+                Console.WriteLine(item.Key + " " + item.Value);
+                if (z++ == 20) break;
+            }
+            z = 0; Console.WriteLine("========================");
+            foreach (var item in dict11c)
+            {
+                Console.WriteLine(item.Key + " " + item.Value);
+            }
         }
 
         static void dowork(object o)
@@ -77,10 +99,13 @@ namespace Prlel_lab_4
             StreamReader f;
             List<string> buf;
             Dictionary<string, long> dict = new Dictionary<string, long>();
+            Dictionary<char, long> dict2 = new Dictionary<char, long>();
+            Dictionary<string, long> dict3 = new Dictionary<string, long>();
             string[] s;
-
+            dict3.Add("ПЭ", 0);
+            dict3.Add("Гласные", 0);
             for (int i = w * (O / M); i < (w + 1) * (O / M); i++)
-            {
+            { 
                 f = File.OpenText(paths[i]);
                 buf = new List<string>();
                 while (!f.EndOfStream)
@@ -89,14 +114,33 @@ namespace Prlel_lab_4
                 }
                 foreach (string line in buf)
                 {
-                    s = line.Split();
+                    s = line.Split(new char[] { ',','.','!','?',';',':','"','\t','\n','[',']',' ','-' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var word in s)
                     {
-                        if (word.All(char.IsLetter) & word != "")
-                            if (dict.ContainsKey(word))
-                                dict[word]++;
-                            else
-                                dict.Add(word, 1);
+                        if (dict.ContainsKey(word))
+                            dict[word]++;
+                        else
+                            dict.Add(word, 1);
+                    }
+                    foreach (char ch in line)
+                    {
+                        if (dict2.ContainsKey(ch))
+                            dict2[ch]++;
+                        else
+                            dict2.Add(ch, 1);
+                    }
+                    foreach (char ch in line)
+                    {
+                        switch (ch)
+                        {
+                            case 'п': case 'П':
+                                dict3["ПЭ"]++; break;
+                            case 'а': case 'А': case 'о': case 'О': case 'у': case 'У':
+                            case 'ы': case 'Ы': case 'е': case 'Е': case 'ю': case 'Ю':
+                            case 'я': case 'Я': case 'э': case 'Э': case 'и': case 'И':
+                            case 'ё': case 'Ё':
+                                dict3["Гласные"]++; break;
+                        }
                     }
                 }
                 f.Close();
@@ -110,6 +154,20 @@ namespace Prlel_lab_4
                         dict11[pair.Key] += pair.Value;
                     else
                         dict11.Add(pair.Key, pair.Value);
+                }
+                foreach (var pair in dict2)
+                {
+                    if (dict11b.ContainsKey(pair.Key))
+                        dict11b[pair.Key] += pair.Value;
+                    else
+                        dict11b.Add(pair.Key, pair.Value);
+                }
+                foreach (var pair in dict3)
+                {
+                    if (dict11c.ContainsKey(pair.Key))
+                        dict11c[pair.Key] += pair.Value;
+                    else
+                        dict11c.Add(pair.Key, pair.Value);
                 }
             }
         }
