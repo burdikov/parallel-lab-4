@@ -27,27 +27,27 @@ namespace Prlel_lab_4
         static void Main(string[] args)
         {
             for (int i = 0; i < O; i++)
-            {
-                paths.Add(s + (i + 1) + ".txt");
-            }
+               paths.Add(s + (i + 1) + ".txt");
             
-            //sXe();
             v11();
-            //v12();
+            v12();
             //v2();
 
-            /*
-            if (!checkOnEtalonne(dict11) | !checkOnEtalonne(result12) | !checkOnEtalonne(result2))
-                Console.WriteLine("Wow! Something went wrong!");
-            else
-                Console.WriteLine("Everething is OK!");
-                */
             Console.ReadKey();
         }
 
-        //====================================================================
-        // 1.1
-        //===========
+        static char[] vowels = new char[] { 'а', 'я', 'о', 'у', 'ы', 'е', 'ё', 'э', 'ю', 'и' };
+        static char[] consonants = new char[] { 'й', 'ц', 'к', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ф', 'в', 'п', 'р', 'л', 'д', 'ж', 'ч', 'с', 'м', 'т', 'б' };
+
+        static bool? isVowel(char ch)
+        {
+            ch = char.ToLower(ch);
+            if (vowels.Contains(ch)) return true;
+            if (consonants.Contains(ch)) return false;
+            return null;
+        }
+
+        #region 1.1
 
         static Dictionary<string, long> dict11 = new Dictionary<string, long>();
         static Dictionary<char, long> dict11b = new Dictionary<char, long>();
@@ -78,32 +78,39 @@ namespace Prlel_lab_4
             foreach (var item in dict11)
             {
                 Console.WriteLine(item.Key + " " + item.Value);
-                if (z++ == 20) break;
+                if (++z == 20) break;
             }
             z = 0; Console.WriteLine("========================");
             foreach (var item in dict11b)
             {
                 Console.WriteLine(item.Key + " " + item.Value);
-                if (z++ == 20) break;
+                if (++z == 20) break;
             }
             z = 0; Console.WriteLine("========================");
             foreach (var item in dict11c)
             {
                 Console.WriteLine(item.Key + " " + item.Value);
             }
+            Console.WriteLine("========================");
         }
 
         static void dowork(object o)
         {
             int w = (int)o;
+
             StreamReader f;
             List<string> buf;
+
             Dictionary<string, long> dict = new Dictionary<string, long>();
             Dictionary<char, long> dict2 = new Dictionary<char, long>();
             Dictionary<string, long> dict3 = new Dictionary<string, long>();
+
             string[] s;
-            dict3.Add("ПЭ", 0);
+            bool? isVowel;
+
+            dict3.Add("Согласные", 0);
             dict3.Add("Гласные", 0);
+
             for (int i = w * (O / M); i < (w + 1) * (O / M); i++)
             { 
                 f = File.OpenText(paths[i]);
@@ -131,16 +138,12 @@ namespace Prlel_lab_4
                     }
                     foreach (char ch in line)
                     {
-                        switch (ch)
-                        {
-                            case 'п': case 'П':
-                                dict3["ПЭ"]++; break;
-                            case 'а': case 'А': case 'о': case 'О': case 'у': case 'У':
-                            case 'ы': case 'Ы': case 'е': case 'Е': case 'ю': case 'Ю':
-                            case 'я': case 'Я': case 'э': case 'Э': case 'и': case 'И':
-                            case 'ё': case 'Ё':
-                                dict3["Гласные"]++; break;
-                        }
+                        isVowel = Program.isVowel(ch);
+                        if (isVowel != null)
+                            if ((bool)isVowel)
+                                dict3["Гласные"]++;
+                            else
+                                dict3["Согласные"]++;
                     }
                 }
                 f.Close();
@@ -172,11 +175,13 @@ namespace Prlel_lab_4
             }
         }
 
-        //====================================================================
-        // 1.2
-        //===========
+        #endregion 1.1
+
+        #region 1.2
 
         static ConcurrentDictionary<string, long> dict12 = new ConcurrentDictionary<string, long>();
+        static ConcurrentDictionary<char, long> dict12b = new ConcurrentDictionary<char, long>();
+        static ConcurrentDictionary<string, long> dict12c = new ConcurrentDictionary<string, long>();
         static Dictionary<string, long> result12;
 
         static void v12()
@@ -198,7 +203,30 @@ namespace Prlel_lab_4
             Console.WriteLine("Время: " + timer.ElapsedMilliseconds + "\n");
 
             result12 = dict12.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
+            var result12b = dict12b.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
+            var result12c = dict12c.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
+
             int k = 0;
+            foreach (var pair in result12)
+            {
+                Console.WriteLine(pair.Key + " " + pair.Value);
+                if (++k == 20) break;
+            }
+            k = 0;
+            Console.WriteLine("========================");
+            foreach (var pair in result12b)
+            {
+                Console.WriteLine(pair.Key + " " + pair.Value);
+                if (++k == 20) break;
+            }
+            k = 0;
+            Console.WriteLine("========================");
+            foreach (var pair in result12c)
+            {
+                Console.WriteLine(pair.Key + " " + pair.Value);
+                if (++k == 20) break;
+            }
+            Console.WriteLine("========================");
         }
 
         static void dowork12(object o)
@@ -206,33 +234,47 @@ namespace Prlel_lab_4
             int w = (int)o;
             StreamReader f;
             List<string> buf;
-            Dictionary<string, long> dict = new Dictionary<string, long>();
             string[] s;
 
             for (int i = w * (O / M); i < (w + 1) * (O / M); i++)
             {
                 f = File.OpenText(paths[i]);
+
                 buf = new List<string>();
+
+                bool? isVowel;
+
                 while (!f.EndOfStream)
                 {
                     buf.Add(f.ReadLine().ToUpper());
                 }
                 foreach (string line in buf)
                 {
-                    s = line.Split();
+                    s = line.Split(new char[] { ',', '.', '!', '?', ';', ':', '"', '\t', '\n', '[', ']', ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var word in s)
                     {
-                        if (word.All(char.IsLetter) & word != "")
-                            dict12.AddOrUpdate(word, 1, (x, y) => y + 1);
+                        dict12.AddOrUpdate(word, 1, (x, y) => y + 1);
+                    }
+                    foreach (char ch in line)
+                    {
+                        dict12b.AddOrUpdate(ch, 1, (x, y) => y + 1);
+                    }
+                    foreach (char ch in line)
+                    {
+                        isVowel = Program.isVowel(ch);
+                        if (isVowel != null)
+                            if ((bool)isVowel)
+                                dict12c.AddOrUpdate("Гласные", 1, (x, y) => y + 1);
+                            else
+                                dict12c.AddOrUpdate("Согласные", 1, (x, y) => y + 1);
                     }
                 }
                 f.Close();
             }
         }
+        #endregion 1.2
 
-        //====================================================================
-        // 2
-        //===========
+        #region 2
 
         /// <summary>
         /// Потоки-читатели файла
@@ -318,13 +360,13 @@ namespace Prlel_lab_4
                 }
             }
         }
+        #endregion 2
 
-        //======================
-        // Straight-forward
-        //===
-
+        #region unneeded
+        /*
         static Dictionary<string, long> etalonne = new Dictionary<string, long>();
 
+        
         static void sXe()
         {
             List<string> buf;
@@ -370,5 +412,7 @@ namespace Prlel_lab_4
             }
             return ok;
         }
+        */
+        #endregion unneeded
     }
 }
