@@ -31,7 +31,7 @@ namespace Prlel_lab_4
             
             v11();
             v12();
-            //v2();
+            v2();
 
             Console.ReadKey();
         }
@@ -46,6 +46,45 @@ namespace Prlel_lab_4
             if (consonants.Contains(ch)) return false;
             return null;
         }
+
+        static void PrintDict<T>(Dictionary<T,long> dict, int count = 0)
+        {
+            if (count == 0) count = dict.Count;
+            int i = 0;
+            foreach (var pair in dict)
+            {
+                Console.WriteLine(++i + ". " + pair.Key + ": " + pair.Value);
+                if (i == count) break;
+            }
+            Console.WriteLine();
+        }
+
+        static Dictionary<T, long> SortToDict<T>(IDictionary<T, long> target)
+        {
+            return target.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
+        }
+
+        static void PrintResult<T1, T2, T3>(IDictionary<T1, long> dict1 = null, IDictionary<T2, long> dict2 = null, IDictionary<T3, long> dict3 = null, int count = 0)
+        {
+            //return; //расскоментируй, чтобы выключить вывод
+            if (dict1 != null)
+            {
+                Console.WriteLine("Подсчёт слов");
+                PrintDict(SortToDict(dict1), count);
+            }
+            if (dict2 != null)
+            {
+                Console.WriteLine("Подсчёт символов");
+                PrintDict(SortToDict(dict2), count);
+            }
+            if (dict3 != null)
+            {
+                Console.WriteLine("Подсчет гласных и согласных");
+                PrintDict(SortToDict(dict3), count);
+            }
+        }
+
+        
 
         #region 1.1
 
@@ -71,27 +110,7 @@ namespace Prlel_lab_4
 
             Console.WriteLine("Время: " + timer.ElapsedMilliseconds + "\n");
 
-            dict11 = dict11.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
-            dict11b = dict11b.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
-
-            int z = 0;
-            foreach (var item in dict11)
-            {
-                Console.WriteLine(item.Key + " " + item.Value);
-                if (++z == 20) break;
-            }
-            z = 0; Console.WriteLine("========================");
-            foreach (var item in dict11b)
-            {
-                Console.WriteLine(item.Key + " " + item.Value);
-                if (++z == 20) break;
-            }
-            z = 0; Console.WriteLine("========================");
-            foreach (var item in dict11c)
-            {
-                Console.WriteLine(item.Key + " " + item.Value);
-            }
-            Console.WriteLine("========================");
+            PrintResult(dict11, dict11b, dict11c, 5);
         }
 
         static void dowork(object o)
@@ -182,7 +201,6 @@ namespace Prlel_lab_4
         static ConcurrentDictionary<string, long> dict12 = new ConcurrentDictionary<string, long>();
         static ConcurrentDictionary<char, long> dict12b = new ConcurrentDictionary<char, long>();
         static ConcurrentDictionary<string, long> dict12c = new ConcurrentDictionary<string, long>();
-        static Dictionary<string, long> result12;
 
         static void v12()
         {
@@ -202,31 +220,7 @@ namespace Prlel_lab_4
 
             Console.WriteLine("Время: " + timer.ElapsedMilliseconds + "\n");
 
-            result12 = dict12.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
-            var result12b = dict12b.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
-            var result12c = dict12c.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
-
-            int k = 0;
-            foreach (var pair in result12)
-            {
-                Console.WriteLine(pair.Key + " " + pair.Value);
-                if (++k == 20) break;
-            }
-            k = 0;
-            Console.WriteLine("========================");
-            foreach (var pair in result12b)
-            {
-                Console.WriteLine(pair.Key + " " + pair.Value);
-                if (++k == 20) break;
-            }
-            k = 0;
-            Console.WriteLine("========================");
-            foreach (var pair in result12c)
-            {
-                Console.WriteLine(pair.Key + " " + pair.Value);
-                if (++k == 20) break;
-            }
-            Console.WriteLine("========================");
+            PrintResult(dict12, dict12b, dict12c, 5);
         }
 
         static void dowork12(object o)
@@ -288,7 +282,8 @@ namespace Prlel_lab_4
 
         static ConcurrentBag<string> sharedBuffer = new ConcurrentBag<string>();
         static ConcurrentDictionary<string, long> sharedDict = new ConcurrentDictionary<string, long>();
-        static Dictionary<string, long> result2;
+        static ConcurrentDictionary<char, long> sharedDictb = new ConcurrentDictionary<char, long>();
+        static ConcurrentDictionary<string, long> sharedDictc = new ConcurrentDictionary<string, long>();
 
         static bool isFinished = false;
 
@@ -325,8 +320,7 @@ namespace Prlel_lab_4
 
             Console.WriteLine("Время: " + timer.ElapsedMilliseconds + "\n");
 
-            result2 = sharedDict.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
-            int q = 0;
+            PrintResult(sharedDict, sharedDictb, sharedDictc, 5);
         }
 
         static void ReadFromFile(object o)
@@ -346,16 +340,30 @@ namespace Prlel_lab_4
         }
         static void ReadFromBuffer()
         {
-            string s;
+            string s; string[] splitted;
+            bool? isVowel;
 
             while (!(isFinished & sharedBuffer.IsEmpty))
             {
                 if (sharedBuffer.TryTake(out s))
                 {
-                    foreach (var word in s.Split())
+                    splitted = s.Split(new char[] { ',', '.', '!', '?', ';', ':', '"', '\t', '\n', '[', ']', ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var word in splitted)
                     {
-                        if (word.All(char.IsLetter) & word != "")
-                            sharedDict.AddOrUpdate(word, 1, (x, y) => y + 1);
+                        sharedDict.AddOrUpdate(word, 1, (x, y) => y + 1);
+                    }
+                    foreach (var ch in s)
+                    {
+                        sharedDictb.AddOrUpdate(ch, 1, (x, y) => y + 1);
+                    }
+                    foreach (var ch in s)
+                    {
+                        isVowel = Program.isVowel(ch);
+                        if (isVowel != null)
+                            if ((bool)isVowel)
+                                sharedDictc.AddOrUpdate("Гласные", 1, (x, y) => y + 1);
+                            else
+                                sharedDictc.AddOrUpdate("Согласные", 1, (x, y) => y + 1);
                     }
                 }
             }
