@@ -84,8 +84,6 @@ namespace Prlel_lab_4
             }
         }
 
-        
-
         #region 1.1
 
         static Dictionary<string, long> dict11 = new Dictionary<string, long>();
