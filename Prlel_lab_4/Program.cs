@@ -345,6 +345,13 @@ namespace Prlel_lab_4
             string s; string[] splitted;
             bool? isVowel;
 
+            Dictionary<string, long> localDictA = new Dictionary<string, long>();
+            Dictionary<char, long> localDictB = new Dictionary<char, long>();
+            Dictionary<string, long> localDictC = new Dictionary<string, long>();
+
+            localDictC.Add("Гласные", 0);
+            localDictC.Add("Согласные", 0);
+
             while (!(isFinished & sharedBuffer.IsEmpty))
             {
                 if (sharedBuffer.TryDequeue(out s))
@@ -352,35 +359,47 @@ namespace Prlel_lab_4
                     splitted = s.Split(new char[] { ',', '.', '!', '?', ';', ':', '"', '\t', '\n', '[', ']', ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var word in splitted)
                     {
-                        lock("dict_1")
-                        {
-                            if (sharedDict.ContainsKey(word))
-                                sharedDict[word]++;
-                            else
-                                sharedDict.Add(word, 1);
-                        }
+                        if (localDictA.ContainsKey(word))
+                            localDictA[word]++;
+                        else
+                            localDictA.Add(word, 1);
                     }
                     foreach (var ch in s)
                     {
-                        lock ("dict_1")
-                        {
-                            if (sharedDictb.ContainsKey(ch))
-                                sharedDictb[ch]++;
-                            else
-                                sharedDictb.Add(ch, 1);
-                        }
+                        if (localDictB.ContainsKey(ch))
+                            localDictB[ch]++;
+                        else
+                            localDictB.Add(ch, 1);
                     }
                     foreach (var ch in s)
                     {
                         isVowel = Program.isVowel(ch);
                         if (isVowel.HasValue)
                             if (isVowel.Value)
-                                sharedDictc["Гласные"]++;
+                                localDictC["Гласные"]++;
                             else
-                                sharedDictc["Согласные"]++;
+                                localDictC["Согласные"]++;
                     }
                 }
             }
+
+            lock ("dict_1")
+                foreach (var pair in localDictA)
+                    if (sharedDict.ContainsKey(pair.Key))
+                        sharedDict[pair.Key] += pair.Value;
+                    else
+                        sharedDict.Add(pair.Key, pair.Value);
+
+            lock("dict_2")
+                foreach (var pair in localDictB)
+                    if (sharedDictb.ContainsKey(pair.Key))
+                        sharedDictb[pair.Key] += pair.Value;
+                    else
+                        sharedDictb.Add(pair.Key, pair.Value);
+
+            lock("dict_3")
+                foreach (var pair in localDictC)
+                    sharedDictc[pair.Key] += pair.Value;
         }
         #endregion 2
 
