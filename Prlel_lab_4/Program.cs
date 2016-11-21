@@ -278,10 +278,10 @@ namespace Prlel_lab_4
         /// </summary>
         const int K = 5;
 
-        static ConcurrentBag<string> sharedBuffer = new ConcurrentBag<string>();
-        static ConcurrentDictionary<string, long> sharedDict = new ConcurrentDictionary<string, long>();
-        static ConcurrentDictionary<char, long> sharedDictb = new ConcurrentDictionary<char, long>();
-        static ConcurrentDictionary<string, long> sharedDictc = new ConcurrentDictionary<string, long>();
+        static ConcurrentQueue<string> sharedBuffer = new ConcurrentQueue<string>();
+        static Dictionary<string, long> sharedDict = new Dictionary<string, long>();
+        static Dictionary<char, long> sharedDictb = new Dictionary<char, long>();
+        static Dictionary<string, long> sharedDictc = new Dictionary<string, long>();
 
         static bool isFinished = false;
 
@@ -300,6 +300,10 @@ namespace Prlel_lab_4
                 fileReaders[i] = new Thread(ReadFromFile);
                 fileReaders[i].Start(i);
             }
+
+            sharedDictc.Add("Гласные", 0);
+            sharedDictc.Add("Согласные", 0);
+
             for (int i = 0; i < K; i++)
             {
                 analitics[i] = new Thread(ReadFromBuffer);
@@ -331,7 +335,7 @@ namespace Prlel_lab_4
                 f = File.OpenText(paths[i]);
                 while (!f.EndOfStream)
                 {
-                    sharedBuffer.Add(f.ReadLine().ToUpper());
+                    sharedBuffer.Enqueue(f.ReadLine().ToUpper());
                 }
                 f.Close();
             }
@@ -343,25 +347,37 @@ namespace Prlel_lab_4
 
             while (!(isFinished & sharedBuffer.IsEmpty))
             {
-                if (sharedBuffer.TryTake(out s))
+                if (sharedBuffer.TryDequeue(out s))
                 {
                     splitted = s.Split(new char[] { ',', '.', '!', '?', ';', ':', '"', '\t', '\n', '[', ']', ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var word in splitted)
                     {
-                        sharedDict.AddOrUpdate(word, 1, (x, y) => y + 1);
+                        lock("dict_1")
+                        {
+                            if (sharedDict.ContainsKey(word))
+                                sharedDict[word]++;
+                            else
+                                sharedDict.Add(word, 1);
+                        }
                     }
                     foreach (var ch in s)
                     {
-                        sharedDictb.AddOrUpdate(ch, 1, (x, y) => y + 1);
+                        lock ("dict_1")
+                        {
+                            if (sharedDictb.ContainsKey(ch))
+                                sharedDictb[ch]++;
+                            else
+                                sharedDictb.Add(ch, 1);
+                        }
                     }
                     foreach (var ch in s)
                     {
                         isVowel = Program.isVowel(ch);
-                        if (isVowel != null)
-                            if ((bool)isVowel)
-                                sharedDictc.AddOrUpdate("Гласные", 1, (x, y) => y + 1);
+                        if (isVowel.HasValue)
+                            if (isVowel.Value)
+                                sharedDictc["Гласные"]++;
                             else
-                                sharedDictc.AddOrUpdate("Согласные", 1, (x, y) => y + 1);
+                                sharedDictc["Согласные"]++;
                     }
                 }
             }
